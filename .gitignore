@@ -1,0 +1,7 @@
+# robot
+/robot_ABB/*
+!/robot_ABB/RAPID
+
+# plc
+/PLC/*
+!estacion_despaletizado.ap15

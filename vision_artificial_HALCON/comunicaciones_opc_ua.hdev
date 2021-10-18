@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="13.0.2.2">
+<procedure name="main">
+<interface/>
+<body>
+<c>* </c>
+<c>* Example for accessing an OPC_UA device with the OPC_UA I/O interface</c>
+<c>* (open an I/O device and read/write some variables)</c>
+<c>* </c>
+<c>* </c>
+<c>* Please adapt the following lines to specify your configuration</c>
+<l>MyOpcUaIP := '172.16.131.228'</l>
+<l>MyOpcUaPortNumber := 4840</l>
+<c>*el numero del puerto lo averigue escribiendo en cmd netstat -an y buscando la IP del PLC</c>
+<c></c>
+<c>* </c>
+<l>MyOpcUaServer := 'opc.tcp://' + MyOpcUaIP + ':' + MyOpcUaPortNumber</l>
+<c>* </c>
+<c>* Query the I/O interface version</c>
+<l>*query_io_interface ('OPC_UA', 'revision', GenParamValue)</l>
+<c>* </c>
+<c>* Open the connection to the server</c>
+<l>open_io_device ('OPC_UA', MyOpcUaServer, [], [], IoDeviceHandle)</l>
+<c>* </c>
+<c>* Get the selected device name</c>
+<l>get_io_device_param (IoDeviceHandle, 'io_device_name', IoDeviceName)</l>
+<c>* </c>
+<c>* To access an OPC UA variable, you need to open an I/O channel for it. In order to</c>
+<c>* open the I/O channel, you need to know the node Id. If you do not know the node Id,</c>
+<c>* but do know the browse path to the node, you can use the 'translate' service to</c>
+<c>* get the node Id.</c>
+<l>control_io_device (IoDeviceHandle, 'translate', ['','/Objects/Server/ServerStatus/CurrentTime'], CurrentTimeNodeId)</l>
+<l>open_io_channel (IoDeviceHandle, CurrentTimeNodeId, [], [], IoChannelHandle)</l>
+<c>* </c>
+<c>* Read the current time</c>
+<l>read_io_channel (IoChannelHandle, Value, Status)</l>
+<c>* </c>
+<c>* Since we're not going to be using the channel again, close it.</c>
+<l>close_io_channel (IoChannelHandle)</l>
+<c></c>
+<l>*open_io_channel (IoDeviceHandle, 'ns=3;s="CAMARAS_HMI_COM"."MyBool"', [], [], IoChannelHandle)</l>
+<l>*read_io_channel (IoChannelHandle, Value, Status)</l>
+<l>*write_io_channel (IoChannelHandle, 'true', Status)</l>
+<c></c>
+<l>*query_io_device (IoDeviceHandle, 'ns=3;s="CAMARAS_HMI_COM"."CHAPA"."SALIDAS"', 'browse', Info)</l>
+<c></c>
+<l>*open_io_channel (IoDeviceHandle, 'ns=3;s="CAMARAS_HMI_COM"."CHAPA"."SALIDAS"."Realizar_vision_Z1"', [], [], IoChannelHandle)</l>
+<l>*read_io_channel (IoChannelHandle, Value, Status)</l>
+<l>*write_io_channel (IoChannelHandle, 'true', Status)</l>
+<c></c>
+<l>*open_io_channel (IoDeviceHandle, 'ns=3;s="CAMARAS_HMI_COM"."CHAPA"."ENTRADAS"."Vision_Realizada"', [], [], IoChannelHandle2)</l>
+<l>*read_io_channel (IoChannelHandle2, Value, Status)</l>
+<l>*write_io_channel (IoChannelHandle2, 'true', Status)</l>
+<c></c>
+<c></c>
+<l>*open_io_channel (IoDeviceHandle, 'ns=3;s="CAMARAS_HMI_COM"."CHAPA"."ENTRADAS"."Pos_x"', [], [], IoChannelHandle2)</l>
+<l>*read_io_channel (IoChannelHandle2, Value, Status)</l>
+<l>*write_io_channel (IoChannelHandle2, 5.0, Status)</l>
+<c></c>
+<l>open_io_channel (IoDeviceHandle, 'ns=3;s="Robot_com"."Chapa"."Salidas"."Robot_posX"', [], [], IoChannelHandle2)</l>
+<l>read_io_channel (IoChannelHandle2, Value, Status)</l>
+<l>write_io_channel (IoChannelHandle2, '30000', Status)</l>
+<c></c>
+<c></c>
+<c>* </c>
+<c>* Open a channel to read the 'Counter1' and 'Counter2' variables. Both channels are</c>
+<c>* subscribed, i.e. the server will monitor the variables and publish any changes</c>
+<c>* automatically.</c>
+<l>* open_io_channel (IoDeviceHandle, ['ns=3;s="CAMARAS_HMI_COM"'], ['MyBool'], [0], Counters)</l>
+<c></c>
+<l>*open_io_channel (IoDeviceHandle, ['ns=3;s=CAMARAS_HMI_COM','ns=3;s=Counter2'], ['sampling_interval','publishing_interval'], [250.0,500.0], Counters)</l>
+<c>* </c>
+<c>* Write the variable. You can read or write multiple channels simultaneously to reduce</c>
+<c>* the necessary network traffic with the OPC UA server.</c>
+<l>* write_io_channel (Counters, [0,0], Status)</l>
+<c>* </c>
+<c>* Give the counters time to change</c>
+<l>* wait_seconds (1)</l>
+<c>* </c>
+<c>* Read the current counter values. Since the variables are both subscribed, the</c>
+<c>* interface won't actually request the current values from the server, but return the</c>
+<c>* cached last values published by the server instead.</c>
+<l>* read_io_channel (Counters, Value, Status)</l>
+<c>* </c>
+<c>* To read the value of a subscribed variable directly from the server (effectively</c>
+<c>* treating it like an unsubscribed variable), turn off caching. Note that caching is</c>
+<c>* turned on by default for subscribed variables.</c>
+<l>* set_io_channel_param (Counters[0], 'cached', 'false')</l>
+<c>* </c>
+<c>* You can mix cached and uncached reads in the same operator call. The interface will</c>
+<c>* only request the values of the uncached variables from the server.</c>
+<l>* read_io_channel (Counters, Value, Status)</l>
+<c>* </c>
+<c>* You can unsubscribe a variable if you are no longer interested in having the</c>
+<c>* server automatically publish changes.</c>
+<l>* set_io_channel_param (Counters[0], 'publishing_interval', 0.0)</l>
+<c>* </c>
+<c>* You can (re)subscribe or just change the subscription parameters at any time.</c>
+<l>* set_io_channel_param (Counters[1], 'publishing_interval', 1000.0)</l>
+<c>* </c>
+<l>* wait_seconds (0.1)</l>
+<l>* read_io_channel (Counters, Value, Status)</l>
+<c>* </c>
+<c>* Close channels you are no longer interested in. Note that closing the device will</c>
+<c>* automatically close all open channels, so you don't need to explicitly do this.</c>
+<l>* close_io_channel (Counters)</l>
+<c>* </c>
+<c>* Close the device</c>
+<l>close_io_device (IoDeviceHandle)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
